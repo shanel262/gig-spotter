@@ -4,7 +4,7 @@ const auth = require("./auth");
 // only get the artists for the tracks
 const artistFields = "tracks.items.track.album.artists";
 
-async function getPlaylist(playlistUrl) {
+async function getPlaylistArtists(playlistUrl) {
   try {
     // get the playlist id from the playlist url
     const playlistId = getPlaylistID(playlistUrl);
@@ -20,15 +20,21 @@ async function getPlaylist(playlistUrl) {
       console.error("no access token", accessToken);
       return;
     }
-    console.log("accessToken: ", accessToken);
 
     // get the playlist by id
     const playlist = await getPlaylistByID(playlistId, accessToken, artistFields);
-    console.log("playlist: ", playlist);
-    return playlist;
+    return parsePlaylistArtists(playlist);
   } catch (error) {
     console.error("error getting playlist: ", error);
   }
+}
+
+function parsePlaylistArtists(playlist) {
+    let artistsDetails = playlist.tracks.items.map(item => item.track.album.artists);
+    let artists = artistsDetails.flatMap(artist => artist.map(a => a.name));
+    // deduplicate
+    artists = [...new Set(artists)];
+    return artists;
 }
 
 async function getPlaylistByID(playlistId, accessToken, fields = null) {
@@ -73,4 +79,4 @@ function getPlaylistID(playlistUrl) {
   return alphanumericId;
 }
 
-module.exports = { getPlaylist };
+module.exports = { getPlaylistArtists };

@@ -8,9 +8,9 @@ const handlePlaylist = async (req, res, query) => {
     res.end(JSON.stringify({ error: 'Missing playlist_url query parameter' }));
     return;
   }
-  const playlist = await spotify.getPlaylist(playlistUrl);
+  const playlistArtists = await spotify.getPlaylistArtists(playlistUrl);
   res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(playlist));
+  res.end(JSON.stringify(playlistArtists));
 };
 
 module.exports = { handlePlaylist };
