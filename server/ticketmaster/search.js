@@ -10,23 +10,29 @@ async function searchEventsByArtist(artistName, attractionId = null, nextPage = 
     // console.log("apiKey: ", apiKey);
 
     // should probably get the attraction id from the artist name and use that instead of the keyword
-    let url
+    let url;
+
+    // Helper to build the Ticketmaster events URL
+    const buildEventsUrl = (id) =>
+        nextPage ||
+        `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&attractionId=${id}&size=200&sort=date,asc&segmentName=Music`;
+
     if (attractionId) {
-        url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(artistName)}&size=200&sort=date,asc&segmentName=Music`;
-        console.log("url: ", url);
+        url = buildEventsUrl(attractionId);
+        // Optionally log the URL for debugging
+        // console.log("Ticketmaster events URL:", url);
     } else {
-        // get the attraction id from the artist name
         try {
-            const attractionId = await getAttractionId(artistName, apiKey);
-            if (attractionId) {
-                url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&attractionId=${attractionId}&size=200&sort=date,asc&segmentName=Music`;
-            console.log("url: ", url);
-            } else {
-                console.error("no attraction id found for artist: ", artistName);
+            const fetchedAttractionId = await getAttractionId(artistName, apiKey);
+            if (!fetchedAttractionId) {
+                console.error(`No attraction id found for artist: ${artistName}`);
                 return [];
             }
+            url = buildEventsUrl(fetchedAttractionId);
+            // Optionally log the URL for debugging
+            // console.log("Ticketmaster events URL:", url);
         } catch (error) {
-            console.error("error getting attraction id: ", error);
+            console.error("Error getting attraction id:", error);
             return [];
         }
     }
@@ -67,7 +73,7 @@ async function searchEventsByArtist(artistName, attractionId = null, nextPage = 
     //         ...(nextPageData && nextPageData._embedded ? nextPageData._embedded.events : [])
     //     ];
     // }
-    return response && response.data && response.data._embedded ? response.data._embedded.events : [];
+    return response && response._embedded ? response._embedded.events : [];
 }
 
 function parseEvent(event) {
