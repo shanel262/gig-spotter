@@ -3,6 +3,7 @@ const auth = require("./auth");
 
 // only get the artists for the tracks
 const artistFields = "tracks.items.track.album.artists";
+const nameAndArtistFields = "name,tracks";
 
 async function getPlaylistArtists(playlistUrl) {
   try {
@@ -22,7 +23,8 @@ async function getPlaylistArtists(playlistUrl) {
     }
 
     // get the playlist by id
-    const playlist = await getPlaylistByID(playlistId, accessToken, artistFields);
+    const playlist = await getPlaylistTracksByID(playlistId, accessToken, null);
+    console.log("playlist: ", playlist);
     return parsePlaylistArtists(playlist);
   } catch (error) {
     console.error("error getting playlist: ", error);
@@ -30,37 +32,45 @@ async function getPlaylistArtists(playlistUrl) {
 }
 
 function parsePlaylistArtists(playlist) {
-    let artistsDetails = playlist.tracks.items.map(item => item.track.album.artists);
+    let artistsDetails = playlist.items.map(item => item.track.album.artists);
     let artists = artistsDetails.flatMap(artist => artist.map(a => a.name));
     // deduplicate
     artists = [...new Set(artists)];
     return artists;
 }
 
-async function getPlaylistByID(playlistId, accessToken, fields = null) {
+async function getPlaylistTracksByID(playlistId, accessToken, fields = null, nextPage = null) {
     // make a request to the spotify api to get the playlist
-    const url = `https://api.spotify.com/v1/playlists/${playlistId}`;
+    const url = nextPage || `https://api.spotify.com/v1/playlists/${playlistId}/tracks?offset=0&limit=100`;
     const options = {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      params: {
-        fields: fields,
-      },
+      params: {},
     };
+    if (fields) {
+      options.params.fields = fields;
+    }
     // console.log("options: ", { url, ...options });
 
     try {
-      const response = await axios.get(url, options);
-      // console.log("playlist: ", response.data);
+      const response = await makeRequest(url, options);
+      // check for next page in response and recursively get the next page
+      if (response.data.items && response.data.next) {
+        // get the next page but parse out fields query param, leaving page and offset in place
+        const nextPageData = await getPlaylistTracksByID(playlistId, accessToken, null, getNextPageUrl(response.data.next));
+        // merge the next page with the current page
+        response.data.items = [...response.data.items, ...nextPageData.items];
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
-        console.error("error getting playlist: ", error.response.status, error.response.data);
+        console.error("error getting playlist by id: ", error.response.status, error.response.data);
+        throw error;
       } else {
-        console.error("error getting playlist: ", error.message);
+        console.error("error getting playlist by id: ", error.message);
+        throw error;
       }
-      return;
     }
 }
 
@@ -77,6 +87,18 @@ function getPlaylistID(playlistUrl) {
   // extract the alphanumericId
   const alphanumericId = path.split("/")[2];
   return alphanumericId;
+}
+
+function getNextPageUrl(url) {
+  const parsedUrl = new URL(url);
+  // parse out fields query param, leaving page and offset in place
+  const nextUrl = parsedUrl.origin + parsedUrl.pathname + `?offset=${parsedUrl.searchParams.get("offset")}&limit=${parsedUrl.searchParams.get("limit")}`;
+  // console.log("nextUrl: ", nextUrl);
+  return nextUrl;
+}
+
+async function makeRequest(url, options) {
+  return await axios.get(url, options);
 }
 
 module.exports = { getPlaylistArtists };
