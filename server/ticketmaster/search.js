@@ -25,4 +25,24 @@ async function searchEventsByArtist(artistName, nextPage = null) {
     }
 }
 
-module.exports = { searchEventsByArtist };
+function parseEvent(event) {
+    console.log("event: ", event);
+    return {
+        name: event.name,
+        info: event.info,
+        date: event.dates.start.localDate, // this is wrong location
+        link: event.url, // get link to buy tickets
+        // get location
+        venue: event.place ? event.place.name : null,
+        city: event.place ? event.place.city.name : null,
+        state: event.place ? event.place.state.name : null,
+        country: event.place ? event.place.country.name : null,
+        // get price
+        priceMin: event.priceRanges ? event.priceRanges[0].min : null, // what about the rest of the list?
+        priceMax: event.priceRanges ? event.priceRanges[0].max : null,
+        // get image
+        image: event.images[0].url,
+    };
+}
+
+module.exports = { searchEventsByArtist, parseEvent };

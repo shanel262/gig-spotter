@@ -42,6 +42,18 @@ router.add('GET', '/playlistArtists', handlePlaylistArtists);
 router.add('GET', '/gigsByPlaylist', handleGigsByPlaylist);
 
 const server = http.createServer((req, res) => {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
   router.handle(req, res);
 });
 

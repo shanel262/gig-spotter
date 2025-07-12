@@ -32,7 +32,7 @@ const handleGigsByPlaylist = async (req, res, query) => {
   let gigs = {};
   for (const artist of playlistArtists) {
     const artistGigs = await ticketmaster.searchEventsByArtist(artist);
-    gigs[artist] = artistGigs;
+    gigs[artist] = artistGigs.map(ticketmaster.parseEvent);
   }
   console.log("gigs: ", gigs);
   res.writeHead(200, { "Content-Type": "application/json" });
