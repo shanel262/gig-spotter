@@ -26,7 +26,7 @@ const handleGigsByPlaylist = async (req, res, query) => {
   console.log("playlistArtists[0]: ", playlistArtists[3]);
 
   // ONLY GET THE FIRST ARTIST FOR NOW
-  playlistArtists = [playlistArtists[3]];
+  // playlistArtists = [playlistArtists[3]];
 
   // get the gigs for the playlist artists
   let gigs = {};
