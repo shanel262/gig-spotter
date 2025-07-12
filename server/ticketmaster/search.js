@@ -7,7 +7,7 @@ async function searchEventsByArtist(artistName, nextPage = null) {
     // get the api key
     const apiKey = auth.getAccessToken();
     // console.log("apiKey: ", apiKey);
-    let url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${artistName}&size=200&sort=date,asc`;
+    let url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(artistName)}&size=200&sort=date,asc&segmentName=Music`;
 
     // Helper to sleep for ms milliseconds
     function sleep(ms) {
@@ -26,22 +26,24 @@ async function searchEventsByArtist(artistName, nextPage = null) {
                 console.warn("Retrying...");
                 continue; // Retry after backoff
             } else {
-                console.error("error getting events: ", error);
+                console.error("error getting events: ", url, error);
                 return [];
             }
         }
     }
 
+    // NOTE: disabling this for now because it's not working, the host is missing from the next url
     // check for next page in response
-    if (response.data._links && response.data._links.next) {
-        // get the next page
-        const nextPageData = await searchEventsByArtist(artistName, response.data._links.next.href);
-        // merge the next page with the current page
-        response.data._embedded.events = [
-            ...(response.data._embedded ? response.data._embedded.events : []),
-            ...(nextPageData._embedded ? nextPageData._embedded.events : [])
-        ];
-    }
+    // if (response.data._links && response.data._links.next) {
+    //     console.log("getting next page: ", response.data._links.next.href);
+    //     // get the next page
+    //     const nextPageData = await searchEventsByArtist(artistName, response.data._links.next.href);
+    //     // merge the next page with the current page
+    //     response.data._embedded.events = [
+    //         ...(response.data._embedded ? response.data._embedded.events : []),
+    //         ...(nextPageData && nextPageData._embedded ? nextPageData._embedded.events : [])
+    //     ];
+    // }
     return response.data._embedded ? response.data._embedded.events : [];
 }
 
