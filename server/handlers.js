@@ -23,7 +23,7 @@ const handleGigsByPlaylist = async (req, res, query) => {
   }
   let playlistArtists = await spotify.getPlaylistArtists(playlistUrl);
   console.log("playlistArtists: ", playlistArtists);
-  console.log("playlistArtists[0]: ", playlistArtists[3]);
+  // console.log("playlistArtists[0]: ", playlistArtists[3]);
 
   // ONLY GET THE FIRST ARTIST FOR NOW
   // playlistArtists = [playlistArtists[3]];

@@ -5,6 +5,9 @@ var client_id = process.env.SPOTIFY_CLIENT_ID;
 var client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 
 async function getAccessToken() {
+  if (!client_id || !client_secret) {
+    throw new Error("client_id or client_secret is not set");
+  }
   const authOptions = {
     url: "https://accounts.spotify.com/api/token",
     method: 'post',

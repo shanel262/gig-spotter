@@ -26,7 +26,7 @@ async function getPlaylistArtists(playlistUrl) {
     const playlist = await getPlaylistTracksByID(playlistId, accessToken, null);
     return parsePlaylistArtists(playlist);
   } catch (error) {
-    console.error("error getting playlist: ", error);
+    console.error("error getting playlist: ", error.message);
   }
 }
 
