@@ -34,7 +34,7 @@ const handleGigsByPlaylist = async (req, res, query) => {
     const artistGigs = await ticketmaster.searchEventsByArtist(artist);
     gigs[artist] = artistGigs.map(ticketmaster.parseEvent);
   }
-  console.log("gigs: ", gigs);
+//   console.log("gigs: ", gigs);
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(gigs));
 };

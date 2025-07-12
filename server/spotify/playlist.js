@@ -9,7 +9,7 @@ async function getPlaylistArtists(playlistUrl) {
   try {
     // get the playlist id from the playlist url
     const playlistId = getPlaylistID(playlistUrl);
-    console.log(playlistId);
+    console.log("playlistId: ", playlistId);
 
     // get the access token
     let error, accessToken = await auth.getAccessToken();
