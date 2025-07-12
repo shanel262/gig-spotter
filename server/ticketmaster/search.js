@@ -1,23 +1,46 @@
+const { request } = require("../request");
 const auth = require("./auth");
 const axios = require("axios");
 
 // search for events by artist name
-async function searchEventsByArtist(artistName, nextPage = null) {
-    console.log("artistName: ", artistName);
+async function searchEventsByArtist(artistName, attractionId = null, nextPage = null) {
+    // console.log("artistName: ", artistName);
     // get the api key
     const apiKey = auth.getAccessToken();
     // console.log("apiKey: ", apiKey);
-    let url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(artistName)}&size=200&sort=date,asc&segmentName=Music`;
+
+    // should probably get the attraction id from the artist name and use that instead of the keyword
+    let url
+    if (attractionId) {
+        url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(artistName)}&size=200&sort=date,asc&segmentName=Music`;
+        console.log("url: ", url);
+    } else {
+        // get the attraction id from the artist name
+        try {
+            const attractionId = await getAttractionId(artistName, apiKey);
+            if (attractionId) {
+                url = nextPage || `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&attractionId=${attractionId}&size=200&sort=date,asc&segmentName=Music`;
+            console.log("url: ", url);
+            } else {
+                console.error("no attraction id found for artist: ", artistName);
+                return [];
+            }
+        } catch (error) {
+            console.error("error getting attraction id: ", error);
+            return [];
+        }
+    }
 
     // Helper to sleep for ms milliseconds
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // TODO: put this in a reuasable function
     let response;
     while (true) {
         try {
-            response = await axios.get(url);
+            response = await request(url);
             break; // Success, exit loop
         } catch (error) {
             if (error.response && error.response.status === 429) {
@@ -44,7 +67,7 @@ async function searchEventsByArtist(artistName, nextPage = null) {
     //         ...(nextPageData && nextPageData._embedded ? nextPageData._embedded.events : [])
     //     ];
     // }
-    return response.data._embedded ? response.data._embedded.events : [];
+    return response && response.data && response.data._embedded ? response.data._embedded.events : [];
 }
 
 function parseEvent(event) {
@@ -76,6 +99,29 @@ function parseEventVenueInfo(venue) {
         postcode: venue.postalCode ? venue.postalCode : null,
     };
     return venueInfo;
+}
+
+async function getAttractionId(artistName, apiKey) {
+  // get the attraction id from the artist name
+  try {
+    const attractions = await request(
+      `https://app.ticketmaster.com/discovery/v2/attractions.json?apikey=${apiKey}&keyword=${encodeURIComponent(artistName)}`
+    );
+    if (!attractions || !attractions._embedded || !attractions._embedded.attractions) {
+      return null;
+    }
+    // loop through attractions and find the one that has the exact artist name in the name
+    for (const attraction of attractions._embedded.attractions) {
+      if (attraction.name.toLowerCase() === artistName.toLowerCase()) {
+        console.log("attraction id: ", artistName, "->", attraction.id);
+        return attraction.id;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("error getting attraction id: ", error);
+    return null;
+  }
 }
 
 module.exports = { searchEventsByArtist, parseEvent };
