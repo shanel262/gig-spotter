@@ -1,7 +1,7 @@
 require('dotenv').config();
 const http = require('http');
 const url = require('url');
-const { handlePlaylist } = require('./handlers');
+const { handlePlaylistArtists, handleGigsByPlaylist } = require('./handlers');
 
 const PORT = process.env.PORT || 3010;
 
@@ -38,7 +38,8 @@ class Router {
 const router = new Router();
 
 // Register routes
-router.add('GET', '/playlist', handlePlaylist);
+router.add('GET', '/playlistArtists', handlePlaylistArtists);
+router.add('GET', '/gigsByPlaylist', handleGigsByPlaylist);
 
 const server = http.createServer((req, res) => {
   router.handle(req, res);
