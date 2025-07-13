@@ -19,7 +19,7 @@ const PlaylistSearchPage = () => {
       type: 'dropdown',
       label: 'Query By',
       placeholder: 'Select an option',
-      value: LIKED_SONGS_QUERY_BY,
+      value: PLAYLIST_QUERY_BY,
       required: true,
       options: [
         { value: PLAYLIST_QUERY_BY, label: 'Artists in Playlist' },
