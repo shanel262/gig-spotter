@@ -4,11 +4,30 @@ import Results from '../components/Results';
 import { getGigsByPlaylist, formatErrorMessage } from '../services/api';
 import './SearchPage.css';
 
+const PLAYLIST_QUERY_BY = 'playlist';
+const LIKED_SONGS_QUERY_BY = 'likedSongs';
+const TOP_ARTISTS_QUERY_BY = 'topArtists';
+const TOP_TRACKS_QUERY_BY = 'topTracks';
+
 // PlaylistSearchPage component - allows users to search for gigs based on artists in a Spotify playlist
 // This page combines the Parameters component for input and Results component for displaying gigs
 const PlaylistSearchPage = () => {
   // State management for the search functionality
   const [parameters, setParameters] = useState([
+    {
+      id: 'queryBy',
+      type: 'dropdown',
+      label: 'Query By',
+      placeholder: 'Select an option',
+      value: LIKED_SONGS_QUERY_BY,
+      required: true,
+      options: [
+        { value: PLAYLIST_QUERY_BY, label: 'Artists in Playlist' },
+        { value: LIKED_SONGS_QUERY_BY, label: 'Artists in Liked Songs' },
+        { value: TOP_ARTISTS_QUERY_BY, label: 'Artists in Top Artists' },
+        { value: TOP_TRACKS_QUERY_BY, label: 'Artists in Top Tracks' }
+      ]
+    },
     {
       id: 'playlistUrl',
       type: 'text',
@@ -24,6 +43,7 @@ const PlaylistSearchPage = () => {
       value: '',
       required: false,
       options: [
+        { value: 'IE', label: 'Ireland' },
         { value: 'US', label: 'United States' },
         { value: 'GB', label: 'United Kingdom' },
         { value: 'CA', label: 'Canada' },
@@ -97,13 +117,16 @@ const PlaylistSearchPage = () => {
       // Validate parameters
       validateParameters();
       
-      // Get playlist URL from parameters
-      const playlistUrl = parameters.find(p => p.id === 'playlistUrl').value;
-      validatePlaylistUrl(playlistUrl);
-
-      // Call the backend API to get gigs for the playlist
-      console.log('Searching for gigs with playlist URL:', playlistUrl);
-      const gigsData = await getGigsByPlaylist(playlistUrl);
+      // Call the appropriate function based on the query by parameter
+      let gigsData;
+      switch (parameters.find(p => p.id === 'queryBy').value) {
+        case 'playlist':
+        default:
+          gigsData = await getGigsByPlaylistPath();
+          break;
+        // case 'likedSongs':
+        //   gigsData = await getGigsByLikedSongsPath(playlistUrl);
+      }
       
       console.log('Received gigs data:', gigsData);
       setResults(gigsData);
@@ -115,6 +138,17 @@ const PlaylistSearchPage = () => {
       setLoading(false);
     }
   };
+
+  const getGigsByPlaylistPath = async () => {
+    // Get playlist URL from parameters
+    const playlistUrl = parameters.find(p => p.id === 'playlistUrl').value;
+    validatePlaylistUrl(playlistUrl);
+
+    // Call the backend API to get gigs for the playlist
+    console.log('Searching for gigs with playlist URL:', playlistUrl);
+    const gigsData = await getGigsByPlaylist(playlistUrl);
+    return gigsData;
+  }
 
   return (
     <div className="search-page">
