@@ -1,0 +1,23 @@
+# Development stage
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Update Alpine packages for security
+RUN apk update && apk upgrade
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 3020
+
+# Start the development server
+CMD ["npm", "start"] 

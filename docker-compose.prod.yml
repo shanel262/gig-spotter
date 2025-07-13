@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+    env_file:
+      - .env
+    networks:
+      - gig-spotter-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3020:3020"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3010
+      - PORT=3020
+    depends_on:
+      - backend
+    networks:
+      - gig-spotter-network
+    restart: unless-stopped
+
+networks:
+  gig-spotter-network:
+    driver: bridge 

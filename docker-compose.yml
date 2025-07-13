@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    container_name: gig-spotter-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=development
+      - PORT=3010
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - gig-spotter-network
+    restart: unless-stopped
+
+  frontend:
+    container_name: gig-spotter-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3020:3020"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3010
+      - PORT=3020
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - gig-spotter-network
+    restart: unless-stopped
+
+networks:
+  gig-spotter-network:
+    driver: bridge
